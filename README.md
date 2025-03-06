@@ -1,10 +1,16 @@
 # One.Formatter
 
-One.Formatter is a simple Windows Forms application that formats JSON data and saves it to a specified directory.
+One.Formatter is a versatile Windows Forms application that formats and saves multiple types of structured data formats with real-time preview.
 
 ## Features
 
-- Format raw JSON or plain text input
+- Real-time formatting preview with dual-panel interface
+- Format and beautify various data formats:
+  - JSON
+  - SQL
+  - XML
+  - CSV
+  - Plain Text
 - Support for Unicode characters including non-ASCII characters
 - Automatic saving to C:/Teknosol directory
 - Custom file naming
@@ -13,26 +19,41 @@ One.Formatter is a simple Windows Forms application that formats JSON data and s
 ## Usage
 
 1. Run the application
-2. Enter a filename (the .json extension will be added automatically if not included)
-3. Input the JSON data or plain text you want to format in the text area
-4. Click the "Oluştur" (Create) button
-5. Your JSON data will be formatted and saved to the C:/Teknosol folder
-6. Choose "Yes" if you want to open the directory after saving
+2. Select the format type from the dropdown menu
+3. Enter your data in the left panel
+4. See the formatted output in real-time in the right panel
+5. Click "Format" to explicitly format complex inputs if needed
+6. Click "Save" to save the formatted output
+7. Enter a filename or use the save dialog
+8. Choose "Yes" if you want to open the directory after saving
+
+## Interface
+
+The application features a dual-panel interface:
+- Left panel: Input data in raw format
+- Right panel: Preview of formatted output in real-time
+- Format selection dropdown at the top
+- Format and Save buttons at the bottom
 
 ## Technical Details
 
 - Windows Forms application built on .NET Framework
 - Uses System.Text.Json library for JSON processing
+- Uses regex-based formatting for SQL queries
+- Uses XDocument for XML formatting
 - Implements UnsafeRelaxedJsonEscaping encoding option for proper Unicode character support
+- TextChanged event handling for real-time preview
 
-## Example
+## Examples
 
-### Input:
+### JSON Example:
+
+**Input:**
 ```json
 {"configurations":[{"name":"Development","connectionString":"Server=localhost;Database=DevDB;User Id=dev;Password=devPass;","environmentVariables":{"ASPNETCORE_ENVIRONMENT":"Development","LOG_LEVEL":"Debug"}}],"appSettings":{"apiVersion":"1.0.0","maxRequestLimit":100,"enableCache":true,"timeout":30}}
 ```
 
-### Output:
+**Output:**
 ```json
 {
   "configurations": [
@@ -54,60 +75,78 @@ One.Formatter is a simple Windows Forms application that formats JSON data and s
 }
 ```
 
-### Plain Text to JSON Example
+### SQL Example:
 
-Input:
-```
-This is some plain text that will be converted to JSON
-```
-
-Output:
-```json
-{
-  "text": "This is some plain text that will be converted to JSON"
-}
+**Input:**
+```sql
+select id, first_name, last_name, email from users where status='active' and last_login > '2023-01-01' order by last_name asc
 ```
 
-## Code Example
+**Output:**
+```sql
+SELECT
+    id,
+    first_name,
+    last_name,
+    email
+FROM
+    users
+WHERE
+    status='active'
+    AND last_login > '2023-01-01'
+ORDER BY
+    last_name ASC
+```
 
-The core formatting functionality uses System.Text.Json:
+### XML Example:
+
+**Input:**
+```xml
+<root><person id="1"><name>John Doe</name><email>john@example.com</email><address><street>123 Main St</street><city>Anytown</city></address></person></root>
+```
+
+**Output:**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <person id="1">
+    <name>John Doe</name>
+    <email>john@example.com</email>
+    <address>
+      <street>123 Main St</street>
+      <city>Anytown</city>
+    </address>
+  </person>
+</root>
+```
+
+## Key Code Snippets
+
+### Real-time Formatting with TextChanged Event
 
 ```csharp
-private string FormatJson(string jsonString)
+private void txtInput_TextChanged(object sender, EventArgs e)
 {
     try
     {
-        // Parse the JSON input
-        using (JsonDocument document = JsonDocument.Parse(jsonString))
+        // Don't try to format if the input is empty
+        if (string.IsNullOrWhiteSpace(txtInput.Text))
         {
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
+            txtOutput.Text = string.Empty;
+            return;
+        }
 
-            return JsonSerializer.Serialize(document, options);
-        }
+        // Get selected format type
+        FormatType formatType = (FormatType)Enum.Parse(typeof(FormatType), cboFormatType.SelectedItem.ToString());
+
+        // Format the text and show in output
+        string formattedText = FormatText(txtInput.Text, formatType);
+        txtOutput.Text = formattedText;
     }
-    catch (JsonException)
+    catch (Exception)
     {
-        // If not valid JSON, try to convert the string to JSON
-        try
-        {
-            // Convert to a simple JSON object
-            var jsonObject = new { text = jsonString };
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-            
-            return JsonSerializer.Serialize(jsonObject, options);
-        }
-        catch
-        {
-            throw new Exception("Invalid JSON format and failed to convert plain text to JSON.");
-        }
+        // Ignore errors during real-time formatting
+        // This prevents exception popups when typing invalid syntax
     }
 }
 ```
@@ -124,7 +163,7 @@ private string FormatJson(string jsonString)
 
 ## Development
 
-This application was developed to address specific needs for JSON formatting with Unicode character support.
+This application was developed to address specific needs for formatting different types of data with Unicode character support and real-time preview.
 
 ## License
 
