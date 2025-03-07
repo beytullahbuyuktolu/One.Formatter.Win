@@ -12,7 +12,7 @@ One.Formatter is a versatile Windows Forms application that formats and saves mu
   - CSV
   - Plain Text
 - Support for Unicode characters including non-ASCII characters
-- Automatic saving to C:/Teknosol directory
+- Automatic saving to C:/Temporary directory
 - Custom file naming
 - Option to open the directory after saving
 
